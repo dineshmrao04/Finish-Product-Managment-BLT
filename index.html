@@ -22,6 +22,8 @@
     --border: #e9eef3;
     --radius: 20px;
     --shadow: 0 2px 8px rgba(0,0,0,0.03);
+    --row-color-a: rgba(0,173,181,0.04);
+    --row-color-b: rgba(0,173,181,0.1);
 }
 .dark {
     --bg: #0a0f1c;
@@ -29,6 +31,8 @@
     --text: #f1f5f9;
     --text-muted: #94a3b8;
     --border: #1e293b;
+    --row-color-a: rgba(0,173,181,0.08);
+    --row-color-b: rgba(0,173,181,0.15);
 }
 body {
     font-family: 'Inter', sans-serif;
@@ -203,14 +207,14 @@ th {
     cursor: pointer;
     font-weight: 600;
     white-space: nowrap;
-    text-align: center;               /* CENTER header text */
+    text-align: center;
     vertical-align: middle;
 }
 td {
     padding: 10px 6px;
     border-bottom: 1px solid var(--border);
     white-space: nowrap;
-    text-align: center;               /* CENTER all data cells */
+    text-align: center;
     vertical-align: middle;
 }
 tr:active { background: rgba(0,173,181,0.1); }
@@ -218,6 +222,14 @@ tr:active { background: rgba(0,173,181,0.1); }
     cursor: pointer;
 }
 .editable-cell:active { background: rgba(0,173,181,0.2); }
+
+/* row coloring groups – only two alternating colours */
+.row-group-a {
+    background-color: var(--row-color-a);
+}
+.row-group-b {
+    background-color: var(--row-color-b);
+}
 
 /* pagination */
 .pagination {
@@ -323,6 +335,19 @@ let sortColumn = null;
 let sortDirection = 'asc';
 let currentPageNum = 1;
 let rowsPerPage = 20;
+
+// Helper to detect which column index to use for row grouping
+function getGroupingColumnIndex(headers, sheetName) {
+    // For "Current Stock" sheet, always use first column (product name)
+    if (sheetName === "Current Stock ") { // note the space – exact name from your sheet
+        return 0;
+    }
+    // Otherwise, try to find "Party Name" column (case‑insensitive)
+    const partyIdx = headers.findIndex(h => h && h.toLowerCase().includes("party name"));
+    if (partyIdx !== -1) return partyIdx;
+    // Fallback: first column
+    return 0;
+}
 
 function showToast(msg, isErr = false) {
     const existing = document.querySelector('.toast');
@@ -506,9 +531,26 @@ function renderTable(rows) {
         tbody.innerHTML = '<tr><td colspan="100">✨ No matching data</td></tr>';
         return;
     }
+    
+    // Determine grouping column index based on current sheet
+    const groupColIdx = getGroupingColumnIndex(headers, currentSheet);
+    
+    let currentGroupValue = null;
+    let currentColorClass = 'row-group-a'; // start with A
+    
     for(let r=0; r<rows.length; r++) {
         const row = rows[r];
         const tr = document.createElement('tr');
+        
+        // Get the value used for grouping (stringify to compare)
+        const groupValue = String(row[groupColIdx] !== undefined ? row[groupColIdx] : '');
+        // If this is a new group (different value), toggle the color class
+        if (groupValue !== currentGroupValue) {
+            currentGroupValue = groupValue;
+            currentColorClass = (currentColorClass === 'row-group-a') ? 'row-group-b' : 'row-group-a';
+        }
+        tr.classList.add(currentColorClass);
+        
         for(let c=0; c<headers.length; c++) {
             const td = document.createElement('td');
             td.innerText = (row[c] !== undefined && row[c] !== null) ? row[c] : "";
@@ -640,3 +682,4 @@ loadData();
 </script>
 </body>
 </html>
+
