@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-<title>Finish Product Managment BLT</title>
+<title>Finish Product Management BLT</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 * {
@@ -178,7 +178,7 @@ body {
     flex-shrink: 0;
 }
 
-/* table */
+/* table – CENTERED DATA */
 .table-container {
     margin: 0 12px 20px 12px;
     background: var(--card);
@@ -203,11 +203,15 @@ th {
     cursor: pointer;
     font-weight: 600;
     white-space: nowrap;
+    text-align: center;               /* CENTER header text */
+    vertical-align: middle;
 }
 td {
     padding: 10px 6px;
     border-bottom: 1px solid var(--border);
     white-space: nowrap;
+    text-align: center;               /* CENTER all data cells */
+    vertical-align: middle;
 }
 tr:active { background: rgba(0,173,181,0.1); }
 .editable-cell {
@@ -274,7 +278,7 @@ tr:active { background: rgba(0,173,181,0.1); }
 <body>
 <div class="header-modern">
     <div class="header-flex">
-        <div class="title-glow"><h1>Finish Product Managment BLT<span class="badge-live">LIVE</span></h1></div>
+        <div class="title-glow"><h1>Finish Product Management BLT<span class="badge-live">LIVE</span></h1></div>
         <div class="btn-group">
             <button class="btn btn-outline-light" id="darkModeBtn">🌙 Dark</button>
             <button class="btn btn-outline-light" id="exportCsvBtn">📥 CSV</button>
@@ -636,4 +640,3 @@ loadData();
 </script>
 </body>
 </html>
-
