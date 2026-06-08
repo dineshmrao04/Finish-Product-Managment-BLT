@@ -22,8 +22,8 @@
     --border: #e9eef3;
     --radius: 20px;
     --shadow: 0 2px 8px rgba(0,0,0,0.03);
-    --row-color-a: rgba(0,173,181,0.04);
-    --row-color-b: rgba(0,173,181,0.1);
+    --group-color-1: rgba(0, 173, 181, 0.08);
+    --group-color-2: rgba(0, 173, 181, 0.02);
 }
 .dark {
     --bg: #0a0f1c;
@@ -31,8 +31,8 @@
     --text: #f1f5f9;
     --text-muted: #94a3b8;
     --border: #1e293b;
-    --row-color-a: rgba(0,173,181,0.08);
-    --row-color-b: rgba(0,173,181,0.15);
+    --group-color-1: rgba(0, 173, 181, 0.2);
+    --group-color-2: rgba(0, 173, 181, 0.05);
 }
 body {
     font-family: 'Inter', sans-serif;
@@ -182,7 +182,7 @@ body {
     flex-shrink: 0;
 }
 
-/* table – CENTERED DATA */
+/* table – CENTERED DATA with row grouping colors */
 .table-container {
     margin: 0 12px 20px 12px;
     background: var(--card);
@@ -217,18 +217,15 @@ td {
     text-align: center;
     vertical-align: middle;
 }
-tr:active { background: rgba(0,173,181,0.1); }
-.editable-cell {
-    cursor: pointer;
+/* row grouping colors */
+tr.group-1 td {
+    background-color: var(--group-color-1);
 }
-.editable-cell:active { background: rgba(0,173,181,0.2); }
-
-/* row coloring groups – only two alternating colours */
-.row-group-a {
-    background-color: var(--row-color-a);
+tr.group-2 td {
+    background-color: var(--group-color-2);
 }
-.row-group-b {
-    background-color: var(--row-color-b);
+tr:hover td {
+    background-color: rgba(0,173,181,0.2) !important;
 }
 
 /* pagination */
@@ -295,8 +292,6 @@ tr:active { background: rgba(0,173,181,0.1); }
             <button class="btn btn-outline-light" id="darkModeBtn">🌙 Dark</button>
             <button class="btn btn-outline-light" id="exportCsvBtn">📥 CSV</button>
             <button class="btn btn-primary" id="refreshBtn">⟳ Sync</button>
-            <button class="btn btn-outline-light" id="addRowBtn">➕ Row</button>
-            <button class="btn btn-outline-light" id="resetPageBtn">↺ Reset</button>
         </div>
     </div>
 </div>
@@ -327,7 +322,7 @@ let workbook = {};
 let currentSheet = "";
 let currentPageIdx = 0;
 let currentPageData = null;
-let originalPageSnapshot = null;
+let originalPageSnapshot = null; // kept for internal reference but no reset button
 
 let globalSearchTerm = "";
 let columnFilters = {};
@@ -335,19 +330,6 @@ let sortColumn = null;
 let sortDirection = 'asc';
 let currentPageNum = 1;
 let rowsPerPage = 20;
-
-// Helper to detect which column index to use for row grouping
-function getGroupingColumnIndex(headers, sheetName) {
-    // For "Current Stock" sheet, always use first column (product name)
-    if (sheetName === "Current Stock ") { // note the space – exact name from your sheet
-        return 0;
-    }
-    // Otherwise, try to find "Party Name" column (case‑insensitive)
-    const partyIdx = headers.findIndex(h => h && h.toLowerCase().includes("party name"));
-    if (partyIdx !== -1) return partyIdx;
-    // Fallback: first column
-    return 0;
-}
 
 function showToast(msg, isErr = false) {
     const existing = document.querySelector('.toast');
@@ -512,6 +494,34 @@ function getFilteredRows() {
     return rows;
 }
 
+// Helper: find column index by name pattern (case-insensitive, partial)
+function findColumnIndex(headers, patterns) {
+    for(let i=0; i<headers.length; i++) {
+        const header = headers[i].toLowerCase();
+        for(let pattern of patterns) {
+            if(header.includes(pattern)) return i;
+        }
+    }
+    return -1;
+}
+
+// Assign alternating group classes (group-1, group-2) based on a key value per row
+function applyRowGrouping(rows, groupColIndex) {
+    if(groupColIndex === -1) return rows.map(() => ''); // no grouping
+    let groupMap = new Map(); // value -> groupId (0 or 1)
+    let nextGroup = 0;
+    let groupAssignments = [];
+    for(let row of rows) {
+        let key = row[groupColIndex] !== undefined && row[groupColIndex] !== null ? String(row[groupColIndex]).trim() : "";
+        if(!groupMap.has(key)) {
+            groupMap.set(key, nextGroup);
+            nextGroup = 1 - nextGroup; // toggle between 0 and 1
+        }
+        groupAssignments.push(groupMap.get(key) === 0 ? 'group-1' : 'group-2');
+    }
+    return groupAssignments;
+}
+
 function renderTable(rows) {
     if(!currentPageData) return;
     const headers = currentPageData.headers;
@@ -528,56 +538,28 @@ function renderTable(rows) {
     const tbody = document.getElementById('tableBody');
     tbody.innerHTML = '';
     if(rows.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="100">✨ No matching data</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="100">✨ No matching data</td><tr>';
         return;
     }
     
-    // Determine grouping column index based on current sheet
-    const groupColIdx = getGroupingColumnIndex(headers, currentSheet);
-    
-    let currentGroupValue = null;
-    let currentColorClass = 'row-group-a'; // start with A
+    // Determine grouping column: prefer "party name", else "product name"
+    let groupColIdx = findColumnIndex(headers, ['party name', 'party', 'customer', 'client']);
+    if(groupColIdx === -1) {
+        groupColIdx = findColumnIndex(headers, ['product name', 'product', 'item']);
+    }
+    const groupClasses = applyRowGrouping(rows, groupColIdx);
     
     for(let r=0; r<rows.length; r++) {
         const row = rows[r];
         const tr = document.createElement('tr');
-        
-        // Get the value used for grouping (stringify to compare)
-        const groupValue = String(row[groupColIdx] !== undefined ? row[groupColIdx] : '');
-        // If this is a new group (different value), toggle the color class
-        if (groupValue !== currentGroupValue) {
-            currentGroupValue = groupValue;
-            currentColorClass = (currentColorClass === 'row-group-a') ? 'row-group-b' : 'row-group-a';
-        }
-        tr.classList.add(currentColorClass);
-        
+        if(groupClasses[r]) tr.className = groupClasses[r];
         for(let c=0; c<headers.length; c++) {
             const td = document.createElement('td');
             td.innerText = (row[c] !== undefined && row[c] !== null) ? row[c] : "";
-            td.classList.add('editable-cell');
-            td.addEventListener('dblclick', (function(rowIdx, colIdx) {
-                return function() { inlineEditHandler(rowIdx, colIdx); };
-            })(r, c));
+            // No editable class, no double-click handler – view only
             tr.appendChild(td);
         }
         tbody.appendChild(tr);
-    }
-}
-
-function inlineEditHandler(filteredRowIndex, colIndex) {
-    const filtered = getFilteredRows();
-    if(filteredRowIndex >= filtered.length) return;
-    const targetRowData = filtered[filteredRowIndex];
-    const oldVal = targetRowData[colIndex];
-    const newVal = prompt(`Edit "${currentPageData.headers[colIndex]}"`, oldVal);
-    if(newVal === null) return;
-    const actualIdx = currentPageData.data.findIndex(row => row === targetRowData);
-    if(actualIdx !== -1) {
-        currentPageData.data[actualIdx][colIndex] = newVal;
-        showToast(`✏️ Edited: ${newVal.substring(0,25)}`);
-        applyFiltersAndRender();
-    } else {
-        showToast("Error locating row", true);
     }
 }
 
@@ -639,24 +621,6 @@ document.getElementById('clearFiltersBtn').addEventListener('click', () => {
     applyFiltersAndRender();
     showToast("All filters cleared");
 });
-document.getElementById('addRowBtn').addEventListener('click', () => {
-    if(!currentPageData) return;
-    const newRow = currentPageData.headers.map(() => "NEW");
-    currentPageData.data.push(newRow);
-    showToast("➕ New row added (local)");
-    applyFiltersAndRender();
-});
-document.getElementById('resetPageBtn').addEventListener('click', () => {
-    if(!originalPageSnapshot) return;
-    currentPageData.headers = [...originalPageSnapshot.headers];
-    currentPageData.data = originalPageSnapshot.data.map(row => [...row]);
-    globalSearchTerm = "";
-    document.getElementById('globalSearch').value = "";
-    columnFilters = {};
-    renderColumnFilters();
-    applyFiltersAndRender();
-    showToast(`🔄 Page "${currentPageData.name}" reset`);
-});
 document.getElementById('exportCsvBtn').addEventListener('click', () => {
     if(!currentPageData) return;
     const filtered = getFilteredRows();
@@ -682,4 +646,3 @@ loadData();
 </script>
 </body>
 </html>
-
