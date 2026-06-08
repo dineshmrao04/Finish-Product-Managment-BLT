@@ -1,1 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+<title>Finish Product Managment BLT</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+:root {
+    --primary: #0f2b3d;
+    --primary-light: #1e4a6b;
+    --accent: #00adb5;
+    --bg: #f4f7fb;
+    --card: #ffffff;
+    --text: #0f172a;
+    --text-muted: #475569;
+    --border: #e9eef3;
+    --radius: 20px;
+    --shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+.dark {
+    --bg: #0a0f1c;
+    --card: #111827;
+    --text: #f1f5f9;
+    --text-muted: #94a3b8;
+    --border: #1e293b;
+}
+body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    transition: background 0.2s, color 0.2s;
+    padding-bottom: env(safe-area-inset-bottom, 16px);
+}
+/* header – sticky on top */
+.header-modern {
+    background: linear-gradient(135deg, #0b2b3b 0%, #1b4f6e 100%);
+    padding: 1rem 1rem 0.8rem;
+    color: white;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    width: 100%;
+}
+.header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.title-glow h1 {
+    font-weight: 700;
+    font-size: 1.5rem;
+    background: linear-gradient(135deg, #fff, #b9f3ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    display: inline-block;
+}
+.badge-live {
+    background: #ef4444;
+    font-size: 0.65rem;
+    border-radius: 40px;
+    padding: 3px 8px;
+    font-weight: 600;
+    margin-left: 8px;
+    vertical-align: middle;
+    animation: pulse 1.5s infinite;
+}
+@keyframes pulse { 0% { opacity: 0.7; } 100% { opacity: 1; } }
+.btn-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.btn {
+    padding: 6px 12px;
+    border-radius: 40px;
+    font-weight: 500;
+    font-size: 0.7rem;
+    cursor: pointer;
+    transition: 0.2s;
+    border: none;
+    background: rgba(255,255,255,0.2);
+    color: white;
+    backdrop-filter: blur(2px);
+}
+.btn-primary {
+    background: var(--accent);
+    color: #0a0f1c;
+}
+.btn-primary:active { transform: scale(0.97); }
+.btn-outline-light:active { background: rgba(255,255,255,0.3); }
+
+/* tab bars – horizontal scroll */
+.tab-bar {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 8px;
+    margin: 12px 12px 8px 12px;
+    padding-bottom: 6px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+}
+.sheet-tab, .page-tab {
+    padding: 8px 16px;
+    border-radius: 40px;
+    cursor: pointer;
+    background: var(--card);
+    border: 1px solid var(--border);
+    font-weight: 500;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    transition: 0.1s;
+    flex-shrink: 0;
+}
+.sheet-tab.active, .page-tab.active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+}
+
+/* action bar */
+.action-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin: 8px 12px;
+}
+.search-wrapper {
+    flex: 2;
+    min-width: 150px;
+}
+.search-wrapper input {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 60px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    font-size: 0.85rem;
+}
+.filter-tools button {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 40px;
+    padding: 8px 14px;
+    font-weight: 500;
+    font-size: 0.75rem;
+}
+.column-filters {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 8px;
+    margin: 0 12px 12px 12px;
+    background: var(--card);
+    border-radius: 20px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    -webkit-overflow-scrolling: touch;
+}
+.filter-input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 30px;
+    padding: 6px 12px;
+    font-size: 0.7rem;
+    min-width: 110px;
+    flex-shrink: 0;
+}
+
+/* table */
+.table-container {
+    margin: 0 12px 20px 12px;
+    background: var(--card);
+    border-radius: 20px;
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    -webkit-overflow-scrolling: touch;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.7rem;
+    min-width: 500px;
+}
+th {
+    background: var(--primary-light);
+    color: white;
+    padding: 12px 8px;
+    position: sticky;
+    top: 0;
+    cursor: pointer;
+    font-weight: 600;
+    white-space: nowrap;
+}
+td {
+    padding: 10px 6px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+}
+tr:active { background: rgba(0,173,181,0.1); }
+.editable-cell {
+    cursor: pointer;
+}
+.editable-cell:active { background: rgba(0,173,181,0.2); }
+
+/* pagination */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 12px;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+}
+.pagination button, .pagination select {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 30px;
+    padding: 6px 12px;
+    font-size: 0.7rem;
+    cursor: pointer;
+}
+.pagination span {
+    font-size: 0.7rem;
+    font-weight: 500;
+}
+
+/* toast */
+.toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--primary);
+    color: white;
+    padding: 10px 18px;
+    border-radius: 40px;
+    z-index: 1000;
+    font-size: 0.75rem;
+    text-align: center;
+    white-space: nowrap;
+    max-width: 90%;
+    white-space: normal;
+    word-break: break-word;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+/* mobile improvements */
+@media (max-width: 600px) {
+    .header-flex { flex-direction: column; align-items: stretch; text-align: center; }
+    .btn-group { justify-content: center; }
+    .action-bar { flex-direction: column; align-items: stretch; }
+    .filter-tools { justify-content: flex-end; }
+    .column-filters { max-width: 100%; }
+    .pagination button, .pagination select { padding: 8px 12px; }
+    th, td { padding: 8px 4px; }
+}
+</style>
+</head>
+<body>
+<div class="header-modern">
+    <div class="header-flex">
+        <div class="title-glow"><h1>Finish Product Managment BLT<span class="badge-live">LIVE</span></h1></div>
+        <div class="btn-group">
+            <button class="btn btn-outline-light" id="darkModeBtn">🌙 Dark</button>
+            <button class="btn btn-outline-light" id="exportCsvBtn">📥 CSV</button>
+            <button class="btn btn-primary" id="refreshBtn">⟳ Sync</button>
+            <button class="btn btn-outline-light" id="addRowBtn">➕ Row</button>
+            <button class="btn btn-outline-light" id="resetPageBtn">↺ Reset</button>
+        </div>
+    </div>
+</div>
+
+<div id="sheetTabs" class="tab-bar"></div>
+<div id="pageTabs" class="tab-bar"></div>
+
+<div class="action-bar">
+    <div class="search-wrapper"><input type="text" id="globalSearch" placeholder="🔍 Search all columns..."></div>
+    <div class="filter-tools"><button class="small-btn" id="clearFiltersBtn">✖ Clear filters</button></div>
+</div>
+<div id="columnFilters" class="column-filters"></div>
+
+<div class="table-container">
+    <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+        <table id="dataTable">
+            <thead id="tableHeader"></thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+    <div id="paginationControls" class="pagination"></div>
+</div>
+
+<script>
+// ---------- GLOBAL STATE ----------
+let apiData = {};
+let workbook = {};
+let currentSheet = "";
+let currentPageIdx = 0;
+let currentPageData = null;
+let originalPageSnapshot = null;
+
+let globalSearchTerm = "";
+let columnFilters = {};
+let sortColumn = null;
+let sortDirection = 'asc';
+let currentPageNum = 1;
+let rowsPerPage = 20;
+
+function showToast(msg, isErr = false) {
+    const existing = document.querySelector('.toast');
+    if(existing) existing.remove();
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.innerText = msg;
+    if(isErr) toast.style.background = '#e11d48';
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2500);
+}
+
+function deepClone(obj) {
+    return JSON.parse(JSON.stringify(obj));
+}
+
+async function loadData() {
+    // ⚠️ REPLACE WITH YOUR ACTUAL APPS SCRIPT URL
+    const API_URL = "https://script.google.com/macros/s/AKfycbyE9uPvMTQ9_q3XxEkvlLyGe-wYuIHoeOHmj6PMUaZGJEvSrfl2uYvE0JRpWwutFL_3Bw/exec";
+    showToast("🔄 Fetching data...");
+    try {
+        const res = await fetch(API_URL);
+        const data = await res.json();
+        apiData = data;
+        workbook = {};
+        for(let sheetName in apiData) {
+            if(apiData[sheetName].pages) {
+                workbook[sheetName] = { pages: [] };
+                for(let pg of apiData[sheetName].pages) {
+                    workbook[sheetName].pages.push({
+                        name: pg.name,
+                        headers: [...pg.headers],
+                        data: pg.data.map(row => [...row])
+                    });
+                }
+            }
+        }
+        renderSheetTabs();
+        if(Object.keys(workbook).length > 0) {
+            const firstSheet = Object.keys(workbook)[0];
+            selectSheet(firstSheet, 0);
+        }
+        showToast("✅ Data ready");
+    } catch(err) {
+        console.error(err);
+        showToast("❌ Load failed", true);
+    }
+}
+
+function renderSheetTabs() {
+    const container = document.getElementById('sheetTabs');
+    container.innerHTML = '';
+    for(let sheetName in workbook) {
+        const btn = document.createElement('div');
+        btn.className = 'sheet-tab';
+        if(sheetName === currentSheet) btn.classList.add('active');
+        btn.innerText = sheetName;
+        btn.onclick = () => selectSheet(sheetName, 0);
+        container.appendChild(btn);
+    }
+}
+
+function selectSheet(sheetName, pageIdx) {
+    currentSheet = sheetName;
+    currentPageIdx = pageIdx;
+    currentPageData = workbook[sheetName].pages[pageIdx];
+    originalPageSnapshot = deepClone(currentPageData);
+    globalSearchTerm = "";
+    document.getElementById('globalSearch').value = "";
+    columnFilters = {};
+    sortColumn = null;
+    currentPageNum = 1;
+    renderPageTabs();
+    renderColumnFilters();
+    applyFiltersAndRender();
+}
+
+function renderPageTabs() {
+    const container = document.getElementById('pageTabs');
+    container.innerHTML = '';
+    const pages = workbook[currentSheet].pages;
+    pages.forEach((pg, idx) => {
+        const btn = document.createElement('div');
+        btn.className = 'page-tab';
+        if(idx === currentPageIdx) btn.classList.add('active');
+        btn.innerText = pg.name;
+        btn.onclick = () => {
+            currentPageIdx = idx;
+            currentPageData = pages[idx];
+            originalPageSnapshot = deepClone(currentPageData);
+            globalSearchTerm = "";
+            document.getElementById('globalSearch').value = "";
+            columnFilters = {};
+            sortColumn = null;
+            currentPageNum = 1;
+            renderPageTabs();
+            renderColumnFilters();
+            applyFiltersAndRender();
+        };
+        container.appendChild(btn);
+    });
+}
+
+function renderColumnFilters() {
+    const container = document.getElementById('columnFilters');
+    container.innerHTML = '<strong style="font-size:0.7rem;">🔍 Column filters:</strong>';
+    if(!currentPageData) return;
+    currentPageData.headers.forEach((col, idx) => {
+        const input = document.createElement('input');
+        input.placeholder = col.substring(0,18);
+        input.className = 'filter-input';
+        input.value = columnFilters[idx] || '';
+        input.addEventListener('input', (e) => {
+            columnFilters[idx] = e.target.value.toLowerCase();
+            currentPageNum = 1;
+            applyFiltersAndRender();
+        });
+        container.appendChild(input);
+    });
+    const clearAll = document.createElement('button');
+    clearAll.innerText = 'Reset all';
+    clearAll.className = 'small-btn';
+    clearAll.style.background = 'var(--card)';
+    clearAll.style.border = '1px solid var(--border)';
+    clearAll.style.borderRadius = '30px';
+    clearAll.style.padding = '6px 12px';
+    clearAll.style.fontSize = '0.7rem';
+    clearAll.onclick = () => {
+        columnFilters = {};
+        renderColumnFilters();
+        applyFiltersAndRender();
+        showToast("Filters cleared");
+    };
+    container.appendChild(clearAll);
+}
+
+function getFilteredRows() {
+    if(!currentPageData) return [];
+    let rows = currentPageData.data.slice();
+    if(globalSearchTerm.trim() !== "") {
+        const term = globalSearchTerm.toLowerCase();
+        rows = rows.filter(row => row.some(cell => String(cell).toLowerCase().includes(term)));
+    }
+    const activeCols = Object.keys(columnFilters).filter(k => columnFilters[k]);
+    if(activeCols.length) {
+        rows = rows.filter(row => {
+            return activeCols.every(colIdx => {
+                const filterVal = columnFilters[colIdx];
+                const cellVal = String(row[parseInt(colIdx)] || "").toLowerCase();
+                return cellVal.includes(filterVal);
+            });
+        });
+    }
+    if(sortColumn !== null) {
+        rows.sort((a,b) => {
+            let aVal = a[sortColumn] || "";
+            let bVal = b[sortColumn] || "";
+            let cmp = String(aVal).localeCompare(String(bVal), undefined, {numeric: true});
+            return sortDirection === 'asc' ? cmp : -cmp;
+        });
+    }
+    return rows;
+}
+
+function renderTable(rows) {
+    if(!currentPageData) return;
+    const headers = currentPageData.headers;
+    const thead = document.getElementById('tableHeader');
+    thead.innerHTML = '';
+    let headerHtml = '<tr>';
+    headers.forEach((h, idx) => {
+        const sortIcon = (sortColumn === idx) ? (sortDirection === 'asc' ? ' ▲' : ' ▼') : '';
+        headerHtml += `<th onclick="window.sortByColumn(${idx})">${h}${sortIcon}</th>`;
+    });
+    headerHtml += '</tr>';
+    thead.innerHTML = headerHtml;
+    
+    const tbody = document.getElementById('tableBody');
+    tbody.innerHTML = '';
+    if(rows.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="100">✨ No matching data</td></tr>';
+        return;
+    }
+    for(let r=0; r<rows.length; r++) {
+        const row = rows[r];
+        const tr = document.createElement('tr');
+        for(let c=0; c<headers.length; c++) {
+            const td = document.createElement('td');
+            td.innerText = (row[c] !== undefined && row[c] !== null) ? row[c] : "";
+            td.classList.add('editable-cell');
+            td.addEventListener('dblclick', (function(rowIdx, colIdx) {
+                return function() { inlineEditHandler(rowIdx, colIdx); };
+            })(r, c));
+            tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+    }
+}
+
+function inlineEditHandler(filteredRowIndex, colIndex) {
+    const filtered = getFilteredRows();
+    if(filteredRowIndex >= filtered.length) return;
+    const targetRowData = filtered[filteredRowIndex];
+    const oldVal = targetRowData[colIndex];
+    const newVal = prompt(`Edit "${currentPageData.headers[colIndex]}"`, oldVal);
+    if(newVal === null) return;
+    const actualIdx = currentPageData.data.findIndex(row => row === targetRowData);
+    if(actualIdx !== -1) {
+        currentPageData.data[actualIdx][colIndex] = newVal;
+        showToast(`✏️ Edited: ${newVal.substring(0,25)}`);
+        applyFiltersAndRender();
+    } else {
+        showToast("Error locating row", true);
+    }
+}
+
+function applyFiltersAndRender() {
+    const filtered = getFilteredRows();
+    const totalPages = Math.ceil(filtered.length / rowsPerPage);
+    if(currentPageNum > totalPages) currentPageNum = Math.max(1, totalPages);
+    const start = (currentPageNum-1)*rowsPerPage;
+    const paginated = filtered.slice(start, start+rowsPerPage);
+    renderTable(paginated);
+    renderPaginationControls(totalPages, filtered.length);
+}
+
+function renderPaginationControls(totalPages, totalItems) {
+    const container = document.getElementById('paginationControls');
+    container.innerHTML = '';
+    const prev = document.createElement('button');
+    prev.innerText = '◀ Prev';
+    prev.disabled = currentPageNum === 1;
+    prev.onclick = () => { if(currentPageNum>1) { currentPageNum--; applyFiltersAndRender(); } };
+    container.appendChild(prev);
+    const span = document.createElement('span');
+    span.innerText = `${currentPageNum} / ${totalPages||1} (${totalItems})`;
+    container.appendChild(span);
+    const next = document.createElement('button');
+    next.innerText = 'Next ▶';
+    next.disabled = currentPageNum >= totalPages;
+    next.onclick = () => { if(currentPageNum < totalPages) { currentPageNum++; applyFiltersAndRender(); } };
+    container.appendChild(next);
+    const select = document.createElement('select');
+    [20, 50, 100].forEach(size => {
+        const opt = document.createElement('option');
+        opt.value = size;
+        opt.innerText = `${size} / page`;
+        if(rowsPerPage === size) opt.selected = true;
+        select.appendChild(opt);
+    });
+    select.onchange = (e) => { rowsPerPage = parseInt(e.target.value); currentPageNum=1; applyFiltersAndRender(); };
+    container.appendChild(select);
+}
+
+window.sortByColumn = function(col) {
+    if(sortColumn === col) sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+    else { sortColumn = col; sortDirection = 'asc'; }
+    currentPageNum = 1;
+    applyFiltersAndRender();
+};
+
+document.getElementById('globalSearch').addEventListener('input', (e) => {
+    globalSearchTerm = e.target.value;
+    currentPageNum = 1;
+    applyFiltersAndRender();
+});
+document.getElementById('clearFiltersBtn').addEventListener('click', () => {
+    globalSearchTerm = "";
+    document.getElementById('globalSearch').value = "";
+    columnFilters = {};
+    renderColumnFilters();
+    applyFiltersAndRender();
+    showToast("All filters cleared");
+});
+document.getElementById('addRowBtn').addEventListener('click', () => {
+    if(!currentPageData) return;
+    const newRow = currentPageData.headers.map(() => "NEW");
+    currentPageData.data.push(newRow);
+    showToast("➕ New row added (local)");
+    applyFiltersAndRender();
+});
+document.getElementById('resetPageBtn').addEventListener('click', () => {
+    if(!originalPageSnapshot) return;
+    currentPageData.headers = [...originalPageSnapshot.headers];
+    currentPageData.data = originalPageSnapshot.data.map(row => [...row]);
+    globalSearchTerm = "";
+    document.getElementById('globalSearch').value = "";
+    columnFilters = {};
+    renderColumnFilters();
+    applyFiltersAndRender();
+    showToast(`🔄 Page "${currentPageData.name}" reset`);
+});
+document.getElementById('exportCsvBtn').addEventListener('click', () => {
+    if(!currentPageData) return;
+    const filtered = getFilteredRows();
+    const headers = currentPageData.headers;
+    let csvRows = [headers, ...filtered];
+    let csvContent = csvRows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csvContent], {type: 'text/csv'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${currentSheet}_${currentPageData.name}.csv`;
+    a.click();
+    showToast("📁 CSV exported (filtered view)");
+});
+document.getElementById('refreshBtn').addEventListener('click', () => { loadData(); });
+document.getElementById('darkModeBtn').addEventListener('click', () => {
+    document.body.classList.toggle('dark');
+    localStorage.setItem('blt_dark', document.body.classList.contains('dark'));
+});
+if(localStorage.getItem('blt_dark') === 'true') document.body.classList.add('dark');
+
+// start
+loadData();
+</script>
+</body>
+</html>
 
